@@ -52,11 +52,13 @@ export class JiraConnector {
 
   async transitionIssue(id: string, target: 'Done' | 'In review') {
     const url = `/issue/${id}/transitions`;
-    const response = await (await this.client.post(url)).data({
-      transition: {
-        id: TRANSITION_IDS[target],
-      },
-    });
+    const response = await (await this.client.post(url)).data(
+      JSON.stringify({
+        transition: {
+          id: TRANSITION_IDS[target],
+        },
+      })
+    );
     if (response.status > 200 && response.status < 400) {
       console.info('Transition success', response.status);
     } else {
