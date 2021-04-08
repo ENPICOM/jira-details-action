@@ -50,7 +50,7 @@ export class JiraConnector {
     return response.data;
   }
 
-  async transitionIssue(id: string, target: 'Done' | 'In Progress') {
+  async transitionIssue(id: string, target: 'Done' | 'In review') {
     const url = `/issue/${id}/transitions`;
     const response = await (await this.client.post(url)).data({
       transition: {
@@ -65,11 +65,11 @@ export class JiraConnector {
   }
 }
 
-type ValidTranstion = 'In Progress' | 'Done';
+type ValidTranstion = 'In review' | 'Done';
 
-export const isValidTransition = (transition: string): transition is ValidTranstion => ['In Progress', 'Done'].includes(transition);
+export const isValidTransition = (transition: string): transition is ValidTranstion => ['In review', 'Done'].includes(transition);
 
 const TRANSITION_IDS = {
   Done: '31',
-  'In Progress': '21',
+  'In review': '51',
 } as const;
