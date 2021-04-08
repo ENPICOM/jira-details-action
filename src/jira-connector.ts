@@ -49,4 +49,27 @@ export class JiraConnector {
     const response = await this.client.get<Jira.Issue>(url);
     return response.data;
   }
+
+  async transitionIssue(id: string, target: 'Done' | 'In Progress') {
+    const url = `/issue/${id}/transitions`;
+    const response = await (await this.client.post(url)).data({
+      transition: {
+        id: TRANSITION_IDS[target],
+      },
+    });
+    if (response.status > 200 && response.status < 400) {
+      console.info('Transition success', response.status);
+    } else {
+      console.error('Transition failed', response.data, response.status);
+    }
+  }
 }
+
+type ValidTranstion = 'In Progress' | 'Done';
+
+export const isValidTransition = (transition: string): transition is ValidTranstion => ['In Progress', 'Done'].includes(transition);
+
+const TRANSITION_IDS = {
+  Done: '31',
+  'In Progress': '21',
+} as const;

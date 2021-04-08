@@ -21,6 +21,10 @@ inputs:
   encode-jira-token:
     description: 'Encode Jira token'
     required: false
+  transition:
+    description: 'Set to "In Progess" or "Done" to transition a JIRA story on PR opened or closed events'
+    required: false
+    default: ''
 runs:
   using: 'node12'
   main: 'lib/index.js'

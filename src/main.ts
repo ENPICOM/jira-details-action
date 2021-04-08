@@ -2,11 +2,11 @@ import * as core from '@actions/core';
 import { shouldSkipBranch } from './utils';
 import { getInputs } from './action-inputs';
 import { GithubConnector } from './github-connector';
-import { JiraConnector } from './jira-connector';
+import { isValidTransition, JiraConnector } from './jira-connector';
 
 async function run(): Promise<void> {
   try {
-    const { BRANCH_IGNORE_PATTERN } = getInputs();
+    const { BRANCH_IGNORE_PATTERN, TRANSITION } = getInputs();
 
     const githubConnector = new GithubConnector();
     const jiraConnector = new JiraConnector();
@@ -30,12 +30,18 @@ async function run(): Promise<void> {
       process.exit(0);
     }
 
-    console.log(`Fetching details for JIRA keys ${issueKeys}`);
-    const tickets = await Promise.all(issueKeys.map((issueKey) => jiraConnector.getTicketDetails(issueKey)));
+    if (TRANSITION === '') {
+      console.log(`Fetching details for JIRA keys ${issueKeys}`);
+      const tickets = await Promise.all(issueKeys.map((issueKey) => jiraConnector.getTicketDetails(issueKey)));
 
-    console.log(`Updating PR description with the following JIRA ticket info: ${JSON.stringify(tickets)}`);
-    await githubConnector.updatePrDetails(tickets);
-
+      console.log(`Updating PR description with the following JIRA ticket info: ${JSON.stringify(tickets)}`);
+      await githubConnector.updatePrDetails(tickets);
+    } else if (isValidTransition(TRANSITION)) {
+      await Promise.all(issueKeys.map((issueKey) => jiraConnector.transitionIssue(issueKey, TRANSITION)));
+    } else {
+      console.error('Unknown transition supplied', TRANSITION);
+      process.exit(1);
+    }
     console.log('Done!');
   } catch (error) {
     console.log({ error });
