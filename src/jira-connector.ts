@@ -18,7 +18,7 @@ export class JiraConnector {
     this.client = axios.create({
       baseURL: `${JIRA_BASE_URL}/rest/api/3`,
       timeout: 2000,
-      headers: { Authorization: `Basic ${encodedToken}` },
+      headers: { Authorization: `Basic ${encodedToken}`, 'Content-Type': 'application/json' },
     });
   }
 
@@ -52,6 +52,7 @@ export class JiraConnector {
 
   async transitionIssue(id: string, target: 'Done' | 'In review') {
     const url = `/issue/${id}/transitions`;
+
     const response = await (await this.client.post(url)).data(
       JSON.stringify({
         transition: {
