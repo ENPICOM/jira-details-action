@@ -5,49 +5,49 @@ import { GithubConnector } from './github-connector';
 import { isValidTransition, JiraConnector } from './jira-connector';
 
 async function run(): Promise<void> {
-  try {
-    const { BRANCH_IGNORE_PATTERN, TRANSITION } = getInputs();
+    try {
+        const { BRANCH_IGNORE_PATTERN, TRANSITION } = getInputs();
 
-    const githubConnector = new GithubConnector();
-    const jiraConnector = new JiraConnector();
+        const githubConnector = new GithubConnector();
+        const jiraConnector = new JiraConnector();
 
-    if (!githubConnector.isPRAction) {
-      console.log('This action is meant to be run only on PRs');
-      process.exit(0);
+        if (!githubConnector.isPRAction) {
+            console.log('This action is meant to be run only on PRs');
+            process.exit(0);
+        }
+
+        const skipBranch = shouldSkipBranch(githubConnector.headBranch, BRANCH_IGNORE_PATTERN);
+
+        if (skipBranch) {
+            console.log('Skipping action on this branch');
+            process.exit(0);
+        }
+
+        const issueKeys = githubConnector.getIssueKeysFromTitle();
+
+        if (!issueKeys) {
+            console.log('Could not find any issue keys');
+            process.exit(0);
+        }
+
+        if (TRANSITION === '') {
+            console.log(`Fetching details for JIRA keys ${issueKeys}`);
+            const tickets = await Promise.all(issueKeys.map((issueKey) => jiraConnector.getTicketDetails(issueKey)));
+
+            console.log(`Updating PR description with the following JIRA ticket info: ${JSON.stringify(tickets)}`);
+            await githubConnector.updatePrDetails(tickets);
+        } else if (isValidTransition(TRANSITION)) {
+            await Promise.all(issueKeys.map((issueKey) => jiraConnector.transitionIssue(issueKey, TRANSITION)));
+        } else {
+            console.error('Unknown transition supplied', TRANSITION);
+            process.exit(1);
+        }
+        console.log('Done!');
+    } catch (error) {
+        console.log({ error });
+        core.setFailed(error.message);
+        process.exit(1);
     }
-
-    const skipBranch = shouldSkipBranch(githubConnector.headBranch, BRANCH_IGNORE_PATTERN);
-
-    if (skipBranch) {
-      console.log('Skipping action on this branch');
-      process.exit(0);
-    }
-
-    const issueKeys = githubConnector.getIssueKeysFromTitle();
-
-    if (!issueKeys) {
-      console.log('Could not find any issue keys');
-      process.exit(0);
-    }
-
-    if (TRANSITION === '') {
-      console.log(`Fetching details for JIRA keys ${issueKeys}`);
-      const tickets = await Promise.all(issueKeys.map((issueKey) => jiraConnector.getTicketDetails(issueKey)));
-
-      console.log(`Updating PR description with the following JIRA ticket info: ${JSON.stringify(tickets)}`);
-      await githubConnector.updatePrDetails(tickets);
-    } else if (isValidTransition(TRANSITION)) {
-      await Promise.all(issueKeys.map((issueKey) => jiraConnector.transitionIssue(issueKey, TRANSITION)));
-    } else {
-      console.error('Unknown transition supplied', TRANSITION);
-      process.exit(1);
-    }
-    console.log('Done!');
-  } catch (error) {
-    console.log({ error });
-    core.setFailed(error.message);
-    process.exit(1);
-  }
 }
 
 run();
