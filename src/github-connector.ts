@@ -1,11 +1,7 @@
 import { getInputs } from './action-inputs';
 import { IGithubData, JiraDetails, PullRequestParams } from './types';
 import { PullsUpdateParams } from '@octokit/rest';
-import {
-    buildPRDescription as buildPrDescription,
-    getJiraIssueKeys,
-    getPRDescription as getPrDescription,
-} from './utils';
+import { buildPrDescription, getJiraIssueKey, getPrDescription } from './utils';
 import { context, GitHub } from '@actions/github/lib/github';
 
 export class GithubConnector {
@@ -26,7 +22,7 @@ export class GithubConnector {
         return this.githubData.pullRequest.head.ref;
     }
 
-    getIssueKeysFromTitle(): string[] | null {
+    getIssueKeyFromTitle(): string | null {
         const { USE_BRANCH_NAME } = getInputs();
 
         const prTitle = this.githubData.pullRequest.title;
@@ -45,12 +41,12 @@ export class GithubConnector {
         }
 
         return (
-            getJiraIssueKeys(preferredStringToParse) ??
-            (backupStringToParse ? getJiraIssueKeys(backupStringToParse) : null)
+            getJiraIssueKey(preferredStringToParse) ??
+            (backupStringToParse ? getJiraIssueKey(backupStringToParse) : null)
         );
     }
 
-    async updatePrDetails(tickets: JiraDetails[]) {
+    async updatePrDetails(ticket: JiraDetails) {
         const owner = this.githubData.owner;
         const repo = this.githubData.repository.name;
 
@@ -60,7 +56,7 @@ export class GithubConnector {
             owner,
             repo,
             pull_number: prNumber,
-            body: getPrDescription(prBody, buildPrDescription(tickets)),
+            body: getPrDescription(prBody, buildPrDescription(ticket)),
         };
 
         await this.client.pulls.update(prData);

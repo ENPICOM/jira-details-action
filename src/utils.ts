@@ -8,9 +8,9 @@ import {
 } from './constants';
 import { JiraDetails } from './types';
 
-export const getJiraIssueKeys = (input: string, regexp: RegExp = JIRA_REGEX_MATCHER): string[] | null => {
+export const getJiraIssueKey = (input: string, regexp: RegExp = JIRA_REGEX_MATCHER): string | null => {
     const matches = input.toUpperCase().match(regexp);
-    return matches?.length ? matches.map((key) => key.replace(' ', '-')) : null;
+    return matches?.length ? matches.map((key) => key.replace(' ', '-'))[0] : null;
 };
 
 export const shouldSkipBranch = (branch: string, additionalIgnorePattern?: string): boolean => {
@@ -42,7 +42,7 @@ const escapeRegexp = (str: string): string => {
     return str.replace(/[\\^$.|?*+(<>)[{]/g, '\\$&');
 };
 
-export const getPRDescription = (oldBody: string, details: string): string => {
+export const getPrDescription = (oldBody: string, details: string): string => {
     const hiddenMarkerStartRg = escapeRegexp(HIDDEN_MARKER_START);
     const hiddenMarkerEndRg = escapeRegexp(HIDDEN_MARKER_END);
 
@@ -65,12 +65,12 @@ const ticketRow = (details: JiraDetails): string => {
   `;
 };
 
-export const buildPRDescription = (tickets: JiraDetails[]): string => {
-    const allRows = tickets.map((ticket) => ticketRow(ticket)).join('');
+export const buildPrDescription = (ticket: JiraDetails): string => {
+    const row = ticketRow(ticket);
 
     return `
 <table>
-  ${allRows}
+  ${row}
 </table>
   <br />
   `;

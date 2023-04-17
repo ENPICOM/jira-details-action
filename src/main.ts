@@ -23,21 +23,21 @@ async function run(): Promise<void> {
             process.exit(0);
         }
 
-        const issueKeys = githubConnector.getIssueKeysFromTitle();
+        const issueKey = githubConnector.getIssueKeyFromTitle();
 
-        if (!issueKeys) {
+        if (issueKey == null) {
             console.log('Could not find any issue keys');
             process.exit(0);
         }
 
         if (TRANSITION === '') {
-            console.log(`Fetching details for JIRA keys ${issueKeys}`);
-            const tickets = await Promise.all(issueKeys.map((issueKey) => jiraConnector.getTicketDetails(issueKey)));
+            console.log(`Fetching details for JIRA keys ${issueKey}`);
+            const ticket = await jiraConnector.getTicketDetails(issueKey);
 
-            console.log(`Updating PR description with the following JIRA ticket info: ${JSON.stringify(tickets)}`);
-            await githubConnector.updatePrDetails(tickets);
+            console.log(`Updating PR description with the following JIRA ticket info: ${JSON.stringify(ticket)}`);
+            await githubConnector.updatePrDetails(ticket);
         } else if (isValidTransition(TRANSITION)) {
-            await Promise.all(issueKeys.map((issueKey) => jiraConnector.transitionIssue(issueKey, TRANSITION)));
+            await jiraConnector.transitionIssue(issueKey, TRANSITION);
         } else {
             console.error('Unknown transition supplied', TRANSITION);
             process.exit(1);
