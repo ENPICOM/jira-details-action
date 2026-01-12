@@ -66,9 +66,9 @@ export class JiraConnector {
     }
 }
 
-type ValidTranstion = 'In PR Review' | 'Done';
+type ValidTransition = 'In PR Review' | 'Done';
 
-export const isValidTransition = (transition: string): transition is ValidTranstion =>
+export const isValidTransition = (transition: string): transition is ValidTransition =>
     Object.keys(TRANSITION_IDS).includes(transition);
 
 const TRANSITION_IDS = {
