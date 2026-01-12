@@ -1,16 +1,16 @@
 import { getInputs } from './action-inputs';
 import { IGithubData, JiraDetails, PullRequestParams } from './types';
-import { PullsUpdateParams } from '@octokit/rest';
 import { buildPrDescription, getJiraIssueKey, getPrDescription } from './utils';
-import { context, GitHub } from '@actions/github/lib/github';
+import { context, getOctokit } from '@actions/github';
+import { GitHub } from '@actions/github/lib/utils';
 
 export class GithubConnector {
-    client: GitHub = {} as GitHub;
+    client: InstanceType<typeof GitHub>;
     githubData: IGithubData = {} as IGithubData;
 
     constructor() {
         const { GITHUB_TOKEN } = getInputs();
-        this.client = new GitHub(GITHUB_TOKEN);
+        this.client = getOctokit(GITHUB_TOKEN);
         this.githubData = this.getGithubData();
     }
 
@@ -52,14 +52,12 @@ export class GithubConnector {
 
         const { number: prNumber = 0, body: prBody = '' } = this.githubData.pullRequest;
 
-        const prData: PullsUpdateParams = {
+        await this.client.rest.pulls.update({
             owner,
             repo,
             pull_number: prNumber,
             body: getPrDescription(prBody, buildPrDescription(ticket)),
-        };
-
-        await this.client.pulls.update(prData);
+        });
     }
 
     private getGithubData(): IGithubData {
