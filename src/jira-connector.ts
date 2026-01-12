@@ -69,9 +69,9 @@ export class JiraConnector {
 type ValidTranstion = 'In review' | 'Done';
 
 export const isValidTransition = (transition: string): transition is ValidTranstion =>
-    ['In review', 'Done'].includes(transition);
+    Object.keys(TRANSITION_IDS).includes(transition);
 
 const TRANSITION_IDS = {
-    'Done': '31',
-    'In review': '51',
+    'Done': '10001',
+    'In PR Review':'10100'
 } as const;
