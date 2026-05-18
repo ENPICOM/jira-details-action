@@ -4,6 +4,21 @@
 
 This action is originally forked from https://github.com/cakeinpanic/jira-description-action, but adds some functionality and removes some. It is by no means a judgment on the nice work of [cakeinpanic](https://github.com/cakeinpanic) - just something that better fits our use cases at [ENPICOM](https://www.enpicom.com).
 
+## Important notes
+The current configuration (may 2026) assumes that:
+- there's a Github action secret `ATLASSIAN_API_TOKEN` configured for IGX-Platform repo
+- key is a combination of a system admin email and Atlassian's API key
+    - the email is `sysadmin@enpicom.com`
+    - the API key is available on AWS Secrets Manager with `GhaAtlassianToken` prefix, [here](https://eu-west-1.console.aws.amazon.com/secretsmanager/secret?name=GhaAtlassianToken424D6858-IVkH2jzA10tz&region=eu-west-1)
+- following the [atlassian docs](https://developer.atlassian.com/cloud/jira/platform/basic-auth-for-rest-apis/#supply-basic-auth-headers), `ATLASSIAN_API_TOKEN` is:
+    - written as `sysadmin@enpicom.com:<key>`
+    - then base64 encoded
+- because `ATLASSIAN_API_TOKEN` is already base64 encoded, we set `encode-jira-token` to `false` in [jira_pr_details.yml](https://github.com/ENPICOM/igx-platform/blob/staging/.github/workflows/jira_pr_details.yml#L16)
+
+### A side note about `jira_transition` action
+- this action does not use `ATLASSIAN_API_TOKEN`
+- instead, it uses boto3 in its [script logic](https://github.com/ENPICOM/igx-platform/blob/staging/.github/workflows/jira_transition.yml#L79), which gets the value directly from AWS Secret Manager and uses base64 encoding by default
+
 ![illustration](illustration.png)
 ## Installation
 
